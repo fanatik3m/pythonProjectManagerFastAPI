@@ -11,6 +11,7 @@ from config import DB_USER, DB_PASS, DB_PORT, DB_HOST, DB_NAME
 
 from database import Base
 from auth.models import *
+from tasks.models import *
 
 config = context.config
 
