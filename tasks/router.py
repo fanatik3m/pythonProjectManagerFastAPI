@@ -5,7 +5,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from auth.models import User
 from auth.users import current_user
 from database import get_async_session
-from projects.models import Project
+from projects.models import Project, ProjectHasUser
+from repository import TaskRepository
 from tasks.models import Task
 from tasks.schemas import TaskCreate
 
@@ -14,24 +15,14 @@ router = APIRouter(
     tags=['Operations with tasks']
 )
 
+task_db_repository = TaskRepository()
+
 
 @router.post('')
 async def add_task(task: TaskCreate, session: AsyncSession = Depends(get_async_session),
                    user: User = Depends(current_user)):
     try:
-        # query = select(Project).where(Project.id == task.project_id).where(Project.creator_id == user.id)
-        # result = await session.execute(query)
-        # if not len(result.all()):
-        #     raise HTTPException(status_code=403, detail={
-        #         'status': 'error',
-        #         'details': {'msg': 'Forbidden'},
-        #         'data': {}
-        #     })
-
-        stmt = insert(Task).values(title=task.title, description=task.description, executor_id=task.executor_id,
-                                   creator_id=user.id, project_id=task.project_id)
-        await session.execute(stmt)
-        await session.commit()
+        await task_db_repository.db_add_task(task=task, session=session, user=user)
         return {
             'status': 'ok',
             'details': {},
@@ -49,9 +40,7 @@ async def add_task(task: TaskCreate, session: AsyncSession = Depends(get_async_s
 async def mark_task_done(task_id: int, session: AsyncSession = Depends(get_async_session),
                          user: User = Depends(current_user)):
     try:
-        stmt = update(Task).where(Task.id == task_id).where(Task.executor_id == user.id).values(done=True)
-        await session.execute(stmt)
-        await session.commit()
+        await task_db_repository.db_mark_task_done(task_id=task_id, session=session, user=user)
         return {
             'status': 'ok',
             'details': {},
@@ -66,12 +55,54 @@ async def mark_task_done(task_id: int, session: AsyncSession = Depends(get_async
 
 
 @router.get('')
-async def check_self_tasks(page: int, session: AsyncSession = Depends(get_async_session), user: User = Depends(current_user)):
+async def check_self_tasks(page: int, session: AsyncSession = Depends(get_async_session),
+                           user: User = Depends(current_user)):
     try:
         offset = (page - 1) * 10
-        query = select(Task).where(Task.executor_id == user.id).limit(10).offset(offset)
-        result = await session.execute(query)
-        return result.scalars().all()
+        data = await task_db_repository.db_check_self_tasks(offset=offset, session=session, user=user)
+        return {
+            'status': 'ok',
+            'details': {},
+            'data': data
+        }
+    except Exception as ex:
+        raise HTTPException(status_code=500, detail={
+            'status': 'error',
+            'details': {'msg': str(ex)},
+            'data': {}
+        })
+
+
+@router.get('/completed')
+async def check_self_completed_tasks(page: int, session: AsyncSession = Depends(get_async_session),
+                                     user: User = Depends(current_user)):
+    try:
+        offset = (page - 1) * 10
+        data = await task_db_repository.db_check_self_completed_tasks(offset=offset, session=session, user=user)
+        return {
+            'status': 'ok',
+            'details': {},
+            'data': data
+        }
+    except Exception as ex:
+        raise HTTPException(status_code=500, detail={
+            'status': 'error',
+            'details': {'msg': str(ex)},
+            'data': {}
+        })
+
+
+@router.get('/uncompleted')
+async def check_self_uncompleted_tasks(page: int, session: AsyncSession = Depends(get_async_session),
+                                       user: User = Depends(current_user)):
+    try:
+        offset = (page - 1) * 10
+        data = await task_db_repository.check_self_uncompleted_tasks(offset=offset, session=session, user=user)
+        return {
+            'status': 'ok',
+            'details': {},
+            'data': data
+        }
     except Exception as ex:
         raise HTTPException(status_code=500, detail={
             'status': 'error',
