@@ -7,7 +7,7 @@ from fastapi_users.authentication import (
     CookieTransport,
     JWTStrategy,
 )
-from fastapi_users.db import SQLAlchemyUserDatabase
+from fastapi_users_db_sqlalchemy import SQLAlchemyUserDatabase
 
 from auth.utils import get_user_db
 from auth.models import User
