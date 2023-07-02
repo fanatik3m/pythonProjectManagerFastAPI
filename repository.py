@@ -35,7 +35,8 @@ class ProjectRepository:
         result = await session.execute(query)
         check_len(result)
 
-        stmt = delete(ProjectHasUser).where(user_id=user_id, project_id=project_id)
+        stmt = delete(ProjectHasUser).where(ProjectHasUser.user_id == user_id).where(
+            ProjectHasUser.project_id == project_id)
         await session.execute(stmt)
         await session.commit()
 
