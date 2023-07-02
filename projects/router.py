@@ -80,6 +80,11 @@ async def delete_user_from_project(project_id: int, user_id: int, session: Async
     try:
         await project_db_repository.db_delete_user_from_project(project_id=project_id, user_id=user_id, session=session,
                                                                 user=user)
+        return {
+            'status': 'ok',
+            'details': {},
+            'data': {}
+        }
     except Exception as ex:
         raise HTTPException(status_code=500, detail={
             'status': 'error',
