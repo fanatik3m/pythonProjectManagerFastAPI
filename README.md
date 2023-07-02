@@ -28,15 +28,15 @@ pip install -r requirements.txt
 
 4. Run the database migrations:
 
-alembic revision --autogenerate -m "First migration"
-alembic upgrade head
++ alembic revision --autogenerate -m "First migration"
++ alembic upgrade head
 
 5. Start the FastAPI server:
 
 uvicorn main:app --reload
 
-
-###Using docker:
+-------------
+Using docker:
 
 1. Clone the repository:
   git clone https://github.com/fanatik3m/pythonProjectManagerFastAPI.git
